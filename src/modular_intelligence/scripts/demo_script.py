@@ -3,7 +3,7 @@ import pandas as pd
 from modular_intelligence.agents.base import BaseAgent
 from modular_intelligence.database.config import Config
 from modular_intelligence.database.init_db import init_database
-from modular_intelligence.stack.stack import AgentStack
+from modular_intelligence.stacks.stack import AgentStack
 from modular_intelligence.scripts.conversations.convos_for_demo_script import get_conversations
 
 
