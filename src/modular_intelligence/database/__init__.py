@@ -1,0 +1,1 @@
+all = ['config', 'init_db']
