@@ -1,8 +1,8 @@
 Metadata-Version: 2.1
 Name: modular_intelligence
-Version: 0.0.7
-Summary: A small example package
-Author-email: xrgpublic <xrgpublic@example.com>
+Version: 0.0.2
+Summary: This repository contains an AI agent framework that was made to simplify and separate the building and deployment phases of AI agents.  Using sqlite, we are able to create & save agents, put them into stacks, then deploy those stacks of agents into any application connected to the server or machine.
+Author-email: xrgpublic <xrgpublic@gmail.com>
 Project-URL: Homepage, https://github.com/xrgpublic/modular-intelligence
 Project-URL: Issues, https://github.com/xrgpublic/modular-intelligence/issues
 Classifier: Programming Language :: Python :: 3
