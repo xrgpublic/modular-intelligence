@@ -212,7 +212,7 @@ class AgentStack:
                 bot_id=slot['bot_id']
             )
 
-    def load_from_db(self, db_path: str, stack_id: int) -> 'AgentStack':
+    def load_from_db(self, db_path: str = None, stack_id: int = None) -> 'AgentStack':
         """Load an existing stack from the database.
         
         Args:
@@ -222,6 +222,8 @@ class AgentStack:
         Returns:
             AgentStack: Loaded stack instance
         """
+        db_path = db_path or self.db_path
+        stack_id = stack_id or self.id
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -237,7 +239,12 @@ class AgentStack:
             self.name = stack_data['name']
             self.description = stack_data['description']
 
-            self.agents = [BaseAgent.load_from_db(bot_id=slot['bot_id']) for slot in self.get_slots()]
+            self.agents = []
+            for slot in self.get_slots():
+                print("slot", slot.id, slot.slot_number, slot.bot_id)
+                temp_agent = BaseAgent(db_path=db_path)
+                temp_agent.load_from_db(bot_id=slot.bot_id)
+                self.agents.append(temp_agent)
 
             return stack_data
     
@@ -270,11 +277,11 @@ class AgentStack:
     
     # sync with database:
     def sync(self, stack_id: int):
-        self.load_from_db(stack_id)
+        self.load_from_db(stack_id=stack_id)
         print(f"Stack synced with database with ID: {stack_id}")
         for agent in self.agents:
             print(f"Agent synced with database with ID: {agent.id} and name: {agent.name}")
-        print(f"Orchestrator synced with database with ID: {self.orchestrator.id} and name: {self.orchestrator.name}")
+        #print(f"Orchestrator synced with database with ID: {self.orchestrator.id} and name: {self.orchestrator.name}")
 
 
     # Returns the list of agents in the stack
