@@ -19,7 +19,7 @@ class StackSlot:
     bot_id: Optional[int]
 
 class AgentStack:
-    def __init__(self, db_path: str, name: str = "", description: str = ""):
+    def __init__(self, db_path: str, name: str = "", description: str = "", agents: Optional[List[BaseAgent]] = [None], **kwargs):
         """Initialize a new stack instance.
         
         Args:
@@ -31,6 +31,8 @@ class AgentStack:
         self.name = name
         self.description = description
         self.id: Optional[int] = None
+        self.agents: Optional[List[BaseAgent]] = agents or []
+        self.orchestrator: Optional[BaseAgent] = kwargs.get("orchestrator") or None
         
     @contextmanager
     def _get_db(self):
@@ -210,7 +212,7 @@ class AgentStack:
                 bot_id=slot['bot_id']
             )
 
-    def load(self, db_path: str, stack_id: int) -> 'AgentStack':
+    def load_from_db(self, db_path: str, stack_id: int) -> 'AgentStack':
         """Load an existing stack from the database.
         
         Args:
@@ -234,6 +236,9 @@ class AgentStack:
             self.id = stack_id
             self.name = stack_data['name']
             self.description = stack_data['description']
+
+            self.agents = [BaseAgent.load_from_db(bot_id=slot['bot_id']) for slot in self.get_slots()]
+
             return stack_data
     
     def create_orchestrator(self):
@@ -262,5 +267,18 @@ class AgentStack:
                 (new_name or self.name, new_description or self.description, self.id)
             )
             conn.commit()
+    
+    # sync with database:
+    def sync(self, stack_id: int):
+        self.load_from_db(stack_id)
+        print(f"Stack synced with database with ID: {stack_id}")
+        for agent in self.agents:
+            print(f"Agent synced with database with ID: {agent.id} and name: {agent.name}")
+        print(f"Orchestrator synced with database with ID: {self.orchestrator.id} and name: {self.orchestrator.name}")
+
+
+    # Returns the list of agents in the stack
+    def get_agents(self):
+        return self.agents
 
         
