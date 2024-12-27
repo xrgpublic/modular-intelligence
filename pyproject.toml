@@ -1,6 +1,6 @@
 [project]
 name = "modular_intelligence"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="xrgpublic", email="xrgpublic@gmail.com" },
 ]

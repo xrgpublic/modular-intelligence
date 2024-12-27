@@ -18,8 +18,8 @@ src/modular_intelligence/scripts/demo_script.py
 src/modular_intelligence/scripts/list_tables.py
 src/modular_intelligence/scripts/rebuild_db.py
 src/modular_intelligence/scripts/conversations/convos_for_demo_script.py
-src/modular_intelligence/stack/__init__.py
-src/modular_intelligence/stack/stack.py
+src/modular_intelligence/stacks/__init__.py
+src/modular_intelligence/stacks/stack.py
 src/modular_intelligence/utils/__init__.py
 src/modular_intelligence/utils/conversation_formatter.py
 src/modular_intelligence/utils/prompts.py
