@@ -437,6 +437,7 @@ class BaseAgent:
         str: The refined system prompt.
         """
         if self.test_mode:
+            print(Fore.RED + "\nALERT!!!\nTest mode enabled. Skipping prompt adjustment.\nALERT!!!" + Style.RESET_ALL)
             return
         response = chat(
             model='llama3.2',
