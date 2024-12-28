@@ -5,6 +5,7 @@ src/modular_intelligence/__init__.py
 src/modular_intelligence.egg-info/PKG-INFO
 src/modular_intelligence.egg-info/SOURCES.txt
 src/modular_intelligence.egg-info/dependency_links.txt
+src/modular_intelligence.egg-info/requires.txt
 src/modular_intelligence.egg-info/top_level.txt
 src/modular_intelligence/agents/__init__.py
 src/modular_intelligence/agents/base.py
