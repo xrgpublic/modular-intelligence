@@ -76,7 +76,7 @@ def get_table_schema(table_name, cursor):
     except sqlite3.Error as e:
         print(f"{Fore.RED}Error getting schema for {table_name}: {e}{Style.RESET_ALL}")
 
-def main():
+def list_tables():
     try:
         # Connect to the database
         conn = sqlite3.connect(Config.DATABASE)

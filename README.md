@@ -102,23 +102,24 @@ from modular_intelligence.database.init_db import init_database
 from modular_intelligence.agents import BaseAgent
 from modular_intelligence.stacks import AgentStack
 from modular_intelligence.scripts.conversations.convos_for_demo_script import get_conversations
+from modular_intelligence.scripts.list_tables import list_tables
 
 # Initialize the database
 init_database()
-print("Database initialized successfully!")
 
+#"test_mode=True" is used to disable API calls.  AI's response's will be simulated with "This is a test mode response. Ollama is disabled." as its response and added to the context window.
 # Step 1: Create agents
-agent1 = BaseAgent(name="MathTutor", description="An AI that helps with math problems.",
-                   default_system_prompt="You are a math tutor helping students understand mathematical concepts.")
-agent2 = BaseAgent(name="EnglishTutor", description="An AI that helps with English grammar and writing.",
-                   default_system_prompt="You are an English tutor assisting students with grammar and composition.")
+agent1 = BaseAgent(name="Agent1", description="An AI that helps with math problems.",
+                   default_system_prompt="You are a math tutor helping students understand mathematical concepts.", test_mode=True)
+agent2 = BaseAgent(name="Agent2", description="An AI that helps with English grammar and writing.",
+                   default_system_prompt="You are an English tutor assisting students with grammar and composition.", test_mode=True)
 
 # Save agents to the database
-agent1.save_to_db()
-agent2.save_to_db()
+agent1.start_session()
+agent2.start_session()
 
 # Step 2: Create a stack and add agents
-stack = AgentStack(name="Education Stack", description="Stack for educational AI agents")
+stack = AgentStack(name="README Stack", description="Showing stack functionality of Modular Intelligence")
 stack.create()
 stack.add_slot(bot=agent1)
 stack.add_slot(bot=agent2)
@@ -126,30 +127,21 @@ stack.add_slot(bot=agent2)
 # Step 3: Simulate conversations and create checkpoints
 conversations = get_conversations()
 for agent, convo in zip([agent1, agent2], conversations):
-    for user_input in convo:
-        agent.generate_response(user_input)
+    for user_inputs in convo:
+        for user_input in user_inputs:
+            agent.generate_response(user_input)
     agent.save_to_db()
+
+agent1.end_session()
+agent2.end_session()
 
 # Step 4: Display database tables
 import sqlite3
 import pandas as pd
 from modular_intelligence.database.init_db import Config
 
-def display_table(table_name):
-    db_connection = sqlite3.connect(Config.DATABASE)
-    cursor = db_connection.cursor()
-    cursor.execute(f"SELECT * FROM {table_name}")
-    rows = cursor.fetchall()
-    columns = [description[0] for description in cursor.description]
-    df = pd.DataFrame(rows, columns=columns)
-    print(f"\nTable: {table_name}")
-    print(df)
-    cursor.close()
-    db_connection.close()
 
-tables_to_display = ['Bots', 'Stacks', 'StackSlots']
-for table in tables_to_display:
-    display_table(table_name=table)
+list_tables()
 ```
 
 Run this script to see agents and stacks in action. The output will display the database tables with details of agents, stacks, and their configurations.

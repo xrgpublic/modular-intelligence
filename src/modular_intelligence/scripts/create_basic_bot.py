@@ -1,5 +1,5 @@
-from modular_intelligence.agents.base import BaseAgent
-from modular_intelligence.scripts.list_tables import main as list_tables
+from modular_intelligence.agents import BaseAgent
+from modular_intelligence.scripts.list_tables import list_tables
 
 def init_bots():
     """" Create a basic bot """
