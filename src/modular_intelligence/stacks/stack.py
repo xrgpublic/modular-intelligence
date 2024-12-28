@@ -10,6 +10,7 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 from contextlib import contextmanager
 from modular_intelligence.agents.base import BaseAgent
+from modular_intelligence.database.config import Config
 
 @dataclass
 class StackSlot:
@@ -19,7 +20,7 @@ class StackSlot:
     bot_id: Optional[int]
 
 class AgentStack:
-    def __init__(self, db_path: str, name: str = "", description: str = "", agents: Optional[List[BaseAgent]] = [None], **kwargs):
+    def __init__(self, db_path: str = Config.DATABASE, name: str = "", description: str = "", agents: Optional[List[BaseAgent]] = None, **kwargs):
         """Initialize a new stack instance.
         
         Args:
@@ -44,7 +45,7 @@ class AgentStack:
         finally:
             conn.close()
             
-    def create(self, orchestrator_bot_id: Optional[int] = None) -> bool:
+    def create(self, orchestrator_bot_id: Optional[int] = None, agents: Optional[List[BaseAgent]] = None) -> bool:
         """Create a new stack in the database.
         
         Args:
@@ -68,6 +69,14 @@ class AgentStack:
             )
             self.id = cursor.lastrowid
             conn.commit()
+            if agents:
+                for agent in agents:
+                    self.add_slot(agent)
+            elif self.agents:
+                for agent in self.agents:
+                    print(f"Agent added to stack with ID: {self.agents}")
+                    self.add_slot(agent)
+
             return True
             
     def add_slot(self, bot: BaseAgent, bot_checkpoint: Optional[int] = None, slot_number: Optional[int] = None) -> Optional[StackSlot]:
@@ -212,24 +221,29 @@ class AgentStack:
                 bot_id=slot['bot_id']
             )
 
-    def load_from_db(self, db_path: str = None, stack_id: int = None) -> 'AgentStack':
+    def load_from_db(self, db_path: str = None, stack_id: int = None, stack_name: str = None) -> 'AgentStack':
         """Load an existing stack from the database.
         
         Args:
             db_path: Path to the SQLite database
             stack_id: ID of the stack to load
+            stack_name: Name of the stack to load
             
         Returns:
             AgentStack: Loaded stack instance
         """
         db_path = db_path or self.db_path
+        print("db_path", db_path)
+
         stack_id = stack_id or self.id
+        stack_name = stack_name or self.name
+        
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             stack_data = cursor.execute(
-                "SELECT * FROM Stacks WHERE id = ?",
-                (stack_id,)
+                "SELECT * FROM Stacks WHERE id = ? OR name = ?",
+                (stack_id, stack_name)
             ).fetchone()
             
             if not stack_data:
