@@ -136,11 +136,6 @@ agent1.end_session()
 agent2.end_session()
 
 # Step 4: Display database tables
-import sqlite3
-import pandas as pd
-from modular_intelligence.database.init_db import Config
-
-
 list_tables()
 ```
 
