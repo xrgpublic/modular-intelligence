@@ -11,6 +11,7 @@ from ollama import generate, chat
 from colorama import init, Fore, Style
 import json
 from modular_intelligence.database.config import Config
+import os
 
 class BaseAgent:
     def __init__(self, db_path=Config.DATABASE, name="default name", description="default description", 
@@ -25,6 +26,7 @@ class BaseAgent:
             raise ValueError("The 'default_system_prompt' must be a non-empty string.")
         
         # Bot properties
+        self.db_path = db_path
         self.id = None  # Will be set when saving to DB
         self.name = name
         self.description = description
@@ -32,6 +34,7 @@ class BaseAgent:
         self.orchestrator_bot = orchestrator_bot
         self.model = model
         self.temperature = kwargs.get("temperature", 0.7)
+        self.format = kwargs.get("format", None)
         
         # Checkpoint properties
         self.system_prompt = system_prompt or default_system_prompt
@@ -39,6 +42,7 @@ class BaseAgent:
         self.memories = memories if memories else []
         self.session_history = session_history if session_history else []
         self.session_messages = [{"role": "system", "content": self.system_prompt}]
+        self.image_path = kwargs.get("image", None)
         
         # Other properties
         self.rank = None  # For stack-specific ranking
@@ -135,6 +139,16 @@ class BaseAgent:
         ]
         """
         self._add_to_list(self.memories, memory, "Memory")
+    
+    def add_structured_output(self, format):
+        """
+        Add structured output format that will be used by ollama.
+        More info here: https://ollama.com/blog/structured-outputs
+
+        Parameters:
+        format (dict): A dictionary representing the structured output format.
+        """
+        self.format = format
 
     def start_session(self, memories_first=False, status="start_session"):
         """
@@ -325,6 +339,9 @@ class BaseAgent:
             self.memories = []
             self.session_history = []
             self.session_messages = [{"role": "system", "content": self.system_prompt}]
+
+        # Setting session history to session messages - Important due to how frontend handles session history.
+        self.session_history = self.session_messages
 
         return self.id
 
@@ -585,8 +602,44 @@ Return the refined prompt in the following format:
 
         return new_bot
 
+    def insert_image(self, db_path, table_name, image_path, name, column_name):
+        """
+        Inserts an image into the specified SQLite database table.
+
+        :param db_path: Path to the SQLite database file.
+        :param table_name: Name of the table to insert the image into.
+        :param image_path: Path to the image file to be inserted.
+        :param column_name: Name of the column where the image will be stored (BLOB type).
+        """
+        try:
+            # Connect to the SQLite database
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            # Read the image file as binary data
+            with open(image_path, 'rb') as file:
+                image_data = file.read()
+
+            # Insert the image into the database
+            query = f"INSERT INTO {table_name} ({column_name}, name, image_path) VALUES (?, ?, ?)"
+            cursor.execute(query, (image_data, name, image_path))
+
+            # Commit the changes and close the connection
+            conn.commit()
+            print("Image successfully inserted into the database.")
+
+        except sqlite3.Error as e:
+            print(f"SQLite error: {e}")
+
+        except FileNotFoundError:
+            print("Image file not found.")
+
+        finally:
+            if conn:
+                conn.close()
+
 # --------------- USER COMMANDS ---------------
-    def generate_response(self, user_input, max_length=2000, throttle_delay=0, model=None, print_user=True, save_response=True, create_checkpoint=False):
+    def generate_response(self, user_input, max_length=2000, throttle_delay=0, model=None, print_user=True, save_response=True, create_checkpoint=False, images: list[str]=None, format=None):
         """
         Processes user input and generates a response from the assistant model.
 
@@ -607,9 +660,15 @@ Return the refined prompt in the following format:
         - str: The generated response from the assistant, or an error message if the response generation fails.
         """
         # Add user input to both session messages and history
-        user_message = {'role': 'user', 'content': user_input}
-        session_hist = self.session_history
-        self.session_history = session_hist#syncing the session history with 
+        if images:
+            user_message = {'role': 'user', 'content': user_input, 'images': images}
+            for image in images:
+                name = os.path.basename(image)
+                self.insert_image(db_path=self.db_path, table_name="images", image_path=image, name=name, column_name="image_blob")
+        else:
+            user_message = {'role': 'user', 'content': user_input}
+        # session_hist = self.session_history
+        # self.session_history = session_hist #syncing the session history with 
         self.session_messages.append(user_message)
 
         import time
@@ -626,7 +685,8 @@ Return the refined prompt in the following format:
             else:
                 response = chat(
                     model=model or self.model,
-                    messages=self.session_messages
+                    messages=self.session_messages,
+                    format=format or self.format
                 )
                 if response and 'message' in response and 'content' in response['message']:
                     content = response['message']['content']

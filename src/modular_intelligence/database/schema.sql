@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS Checkpoints (
     model TEXT,
     name TEXT,
     description TEXT,
+    image BLOB,
     FOREIGN KEY (bot_id) REFERENCES Bots(id) ON DELETE CASCADE
     
 );
@@ -66,4 +67,11 @@ CREATE TABLE IF NOT EXISTS StackSlots (
     FOREIGN KEY (stack_id) REFERENCES Stacks(id) ON DELETE CASCADE,
     FOREIGN KEY (bot_id) REFERENCES Bots(id) ON DELETE CASCADE,
     FOREIGN KEY (bot_checkpoint_id) REFERENCES Checkpoints(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    image_path TEXT NOT NULL,
+    image_blob BLOB
 );
